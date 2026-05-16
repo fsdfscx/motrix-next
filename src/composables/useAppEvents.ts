@@ -53,6 +53,7 @@ interface AppEventsDeps {
     handleDeepLinkUrls: (urls: string[]) => DeepLinkHandlingResult | void
     engineReady: boolean
     engineRestarting: boolean
+    browserDownloadVisible: boolean
   }
   taskStore: {
     taskList: unknown[]
@@ -508,6 +509,37 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
         ...summarizeExternalInputBatch(urls),
       }),
     )
+
+    // 先处理下载请求，检查是否会显示浏览器下载弹窗
+    logger.info('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'start' }))
+    let handlingResult: DeepLinkHandlingResult | void
+    try {
+      handlingResult = appStore.handleDeepLinkUrls(urls)
+      logger.info(
+        'ExternalInput',
+        formatLogFields({
+          traceId,
+          stage: 'route-download',
+          result: 'ok',
+          received: handlingResult?.received ?? 'unknown',
+          queued: handlingResult?.queued ?? 'unknown',
+          autoSubmitted: handlingResult?.autoSubmitted ?? 'unknown',
+          ignored: handlingResult?.ignored ?? 'unknown',
+        }),
+      )
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      logger.error('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'failed', reason }))
+      throw error
+    }
+
+    // 如果显示了浏览器下载弹窗，不显示主窗口
+    if (appStore.browserDownloadVisible) {
+      logger.debug('ExternalInput', formatLogFields({ traceId, stage: 'window', result: 'skipped', reason: 'browser-download-dialog-visible' }))
+      return
+    }
+
+    // 否则显示主窗口并导航
     const mainWindow = getCurrentWindow()
     await runExternalInputWindowStage(traceId, 'unminimize', () => mainWindow.unminimize())
     await runExternalInputWindowStage(traceId, 'show', () => mainWindow.show())
@@ -528,27 +560,6 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
           formatLogFields({ traceId, stage: 'navigate', result: 'failed', route: '/task/all', reason }),
         )
       }
-    }
-
-    logger.info('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'start' }))
-    try {
-      const handlingResult = appStore.handleDeepLinkUrls(urls)
-      logger.info(
-        'ExternalInput',
-        formatLogFields({
-          traceId,
-          stage: 'route-download',
-          result: 'ok',
-          received: handlingResult?.received ?? 'unknown',
-          queued: handlingResult?.queued ?? 'unknown',
-          autoSubmitted: handlingResult?.autoSubmitted ?? 'unknown',
-          ignored: handlingResult?.ignored ?? 'unknown',
-        }),
-      )
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error)
-      logger.error('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'failed', reason }))
-      throw error
     }
   }
 
