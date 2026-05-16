@@ -118,7 +118,7 @@
     "updater": {
       "endpoints": [
         "https://github.com/AnInsomniacy/motrix-next/releases/download/updater/latest.json"
-      ],
+      ]
     },
     "deep-link": {
       "desktop": {
