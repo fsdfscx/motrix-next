@@ -260,4 +260,16 @@ export default {
   'category-dir-placeholder': 'Leave empty for auto-classification',
   'favorite-folders': 'Favorites',
   'recent-folders': 'Recent',
+  'browser-download': {
+    'title': 'Download File Info',
+    'url': 'Download URL',
+    'url-placeholder': 'Download URL will be filled automatically...',
+    'custom-path': 'Custom Path',
+    'path-placeholder': 'Leave empty for auto-classification',
+    'auto-category-hint': 'Auto-classification is enabled, files will be saved to their category folders',
+    'filename': 'Rename',
+    'filename-placeholder': 'Optional',
+    'cancel': 'Cancel',
+    'start-download': 'Start Download',
+  },
 }

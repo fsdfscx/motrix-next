@@ -260,4 +260,16 @@ export default {
   'category-dir-placeholder': '留空则自动分类',
   'favorite-folders': '收藏夹',
   'recent-folders': '最近使用',
+  'browser-download': {
+    'title': '下载文件信息',
+    'url': '下载链接',
+    'url-placeholder': '下载链接将自动填入...',
+    'custom-path': '自定义路径',
+    'path-placeholder': '留空自动分类',
+    'auto-category-hint': '已开启自动分类，文件将保存到对应的目录',
+    'filename': '重命名',
+    'filename-placeholder': '选填',
+    'cancel': '取消',
+    'start-download': '开始下载',
+  },
 }

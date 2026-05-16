@@ -47,6 +47,14 @@ function normalizeFileUriPath(url: string): string {
   return /^\/[A-Za-z]:[\\/]/.test(decodedPath) ? decodedPath.slice(1) : decodedPath
 }
 
+export interface BrowserDownloadInfo {
+  url: string
+  referer?: string
+  cookie?: string
+  filename?: string
+  fileSize?: string
+}
+
 export const useAppStore = defineStore('app', () => {
   const systemTheme = ref('light')
   const trayFocused = ref(false)
@@ -78,6 +86,10 @@ export const useAppStore = defineStore('app', () => {
   const engineRestarting = ref(true)
   let engineRestartingSince = Date.now()
   const MIN_BANNER_MS = 1000
+  /** 浏览器下载弹窗状态 */
+  const browserDownloadVisible = ref(false)
+  /** 浏览器下载数据 */
+  const browserDownloadData = ref<BrowserDownloadInfo | null>(null)
 
   /** Set engine restarting state with minimum display time to prevent flicker. */
   function setEngineRestarting(value: boolean) {
@@ -260,15 +272,6 @@ export const useAppStore = defineStore('app', () => {
           const downloadUrl = motrixDeepLink.downloadUrl
           const kind = detectKind(downloadUrl)
           const resolvedHint = resolveExternalFilenameHint(downloadUrl, motrixDeepLink.filename)
-          if (motrixDeepLink.referer) {
-            pendingReferer.value = motrixDeepLink.referer
-          }
-          if (motrixDeepLink.cookie) {
-            pendingCookie.value = motrixDeepLink.cookie
-          }
-          if (resolvedHint) {
-            pendingFilename.value = resolvedHint
-          }
 
           const autoSubmit = usePreferenceStore().config.autoSubmitFromExtension
           logger.info(
@@ -283,7 +286,19 @@ export const useAppStore = defineStore('app', () => {
               autoSubmit,
             }),
           )
-          if (autoSubmit && kind === 'uri') {
+
+          // 如果是浏览器扩展的下载请求，显示专门的弹窗
+          if (motrixDeepLink.referer || motrixDeepLink.cookie || resolvedHint) {
+            browserDownloadData.value = {
+              url: downloadUrl,
+              referer: motrixDeepLink.referer,
+              cookie: motrixDeepLink.cookie,
+              filename: resolvedHint || motrixDeepLink.filename,
+            }
+            browserDownloadVisible.value = true
+            result.queued += 1
+          } else if (autoSubmit && kind === 'uri') {
+            // 没有额外信息的自动提交
             result.autoSubmitted += 1
             void autoSubmitExtensionUrl(downloadUrl, motrixDeepLink.referer, motrixDeepLink.cookie, resolvedHint)
           } else {
@@ -434,5 +449,7 @@ export const useAppStore = defineStore('app', () => {
     handleDeepLinkUrls,
     pendingProtocolHijack,
     pendingFilename,
+    browserDownloadVisible,
+    browserDownloadData,
   }
 })

@@ -41,6 +41,7 @@ import WindowControls from '@/components/layout/WindowControls.vue'
 import EngineOverlay from '@/components/layout/EngineOverlay.vue'
 import AboutPanel from '@/components/about/AboutPanel.vue'
 import AddTask from '@/components/task/AddTask.vue'
+import BrowserDownloadDialog from '@/components/task/BrowserDownloadDialog.vue'
 import UpdateDialog from '@/components/preference/UpdateDialog.vue'
 import MagnetFileSelect from '@/components/task/MagnetFileSelect.vue'
 import { useTaskStore } from '@/stores/task'
@@ -373,6 +374,31 @@ async function handleMagnetConfirm(selectedIndices: number[]) {
   if (appStore.pendingMagnetGids.length > 0) {
     setTimeout(startMagnetPoll, 350)
   }
+}
+
+// 浏览器下载弹窗确认处理
+async function handleBrowserDownloadConfirm(data: { dir: string; filename: string }) {
+  const downloadData = appStore.browserDownloadData
+  if (!downloadData) return
+
+  const item = createBatchItem('uri', downloadData.url)
+  if (data.filename) {
+    item.displayName = data.filename
+  }
+
+  appStore.enqueueBatch([item])
+  appStore.browserDownloadVisible = false
+  appStore.browserDownloadData = null
+
+  if (data.dir) {
+    preferenceStore.recordHistoryDirectory(data.dir)
+  }
+}
+
+// 浏览器下载弹窗关闭处理
+function handleBrowserDownloadClose() {
+  appStore.browserDownloadVisible = false
+  appStore.browserDownloadData = null
 }
 
 async function handleMagnetCancel() {
@@ -960,6 +986,12 @@ onUnmounted(() => {
     <Speedometer />
     <AboutPanel :show="showAbout" @close="showAbout = false" />
     <AddTask :show="appStore.addTaskVisible" @close="appStore.hideAddTaskDialog()" />
+    <BrowserDownloadDialog
+      :show="appStore.browserDownloadVisible"
+      :data="appStore.browserDownloadData"
+      @confirm="handleBrowserDownloadConfirm"
+      @close="handleBrowserDownloadClose"
+    />
     <UpdateDialog ref="updateDialogRef" />
     <EngineOverlay
       :show="showEngineOverlay"
