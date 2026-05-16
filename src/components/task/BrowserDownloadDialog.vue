@@ -256,10 +256,7 @@ function handleClose() {
         <template v-if="autoCategoryEnabled">
           <!-- 自动分类开启时 -->
           <template v-if="useAutoCategory">
-            <NFormItem
-              :label="t('browser-download.custom-path') || '自定义路径:'"
-              style="margin-bottom: 8px"
-            >
+            <NFormItem :label="t('browser-download.custom-path') || '自定义路径:'" style="margin-bottom: 8px">
               <div class="path-input-group">
                 <NInput
                   v-model:value="form.dir"
@@ -304,10 +301,7 @@ function handleClose() {
 
           <!-- 手动模式 -->
           <template v-else>
-            <NFormItem
-              :label="t('browser-download.save-path') || '存储路径:'"
-              style="margin-bottom: 16px"
-            >
+            <NFormItem :label="t('browser-download.save-path') || '存储路径:'" style="margin-bottom: 16px">
               <div class="path-input-group">
                 <NInput
                   v-model:value="form.dir"
@@ -344,10 +338,7 @@ function handleClose() {
 
         <!-- 非自动分类模式 -->
         <template v-else>
-          <NFormItem
-            :label="t('browser-download.save-path') || '存储路径:'"
-            style="margin-bottom: 16px"
-          >
+          <NFormItem :label="t('browser-download.save-path') || '存储路径:'" style="margin-bottom: 16px">
             <div class="path-input-group">
               <NInput
                 v-model:value="form.dir"
@@ -374,18 +365,19 @@ function handleClose() {
 
         <!-- 重命名 -->
         <NFormItem :label="t('browser-download.filename') || '重命名:'" style="margin-bottom: 16px">
-          <NInput
-            v-model:value="form.filename"
-            :placeholder="t('browser-download.filename-placeholder') || '选填'"
-          />
+          <NInput v-model:value="form.filename" :placeholder="t('browser-download.filename-placeholder') || '选填'" />
         </NFormItem>
 
         <!-- 高级选项 -->
-        <NCollapse v-model:expanded-names="showAdvanced ? ['advanced'] : []">
-          <NCollapseItem
-            :title="t('browser-download.advanced-options') || '高级选项'"
-            name="advanced"
-          >
+        <NCollapse
+          :expanded-names="showAdvanced ? ['advanced'] : []"
+          @update:expanded-names="
+            (val: string[]) => {
+              showAdvanced = val.includes('advanced')
+            }
+          "
+        >
+          <NCollapseItem :title="t('browser-download.advanced-options') || '高级选项'" name="advanced">
             <div class="advanced-panel">
               <!-- User-Agent -->
               <NFormItem
@@ -442,17 +434,8 @@ function handleClose() {
               </NFormItem>
 
               <!-- 代理选择 -->
-              <NFormItem
-                :label="t('browser-download.proxy') || '代理:'"
-                label-width="72px"
-                style="margin-bottom: 12px"
-              >
-                <NSelect
-                  v-model:value="form.proxyMode"
-                  :options="proxyOptions"
-                  size="small"
-                  style="width: 100%"
-                />
+              <NFormItem :label="t('browser-download.proxy') || '代理:'" label-width="72px" style="margin-bottom: 12px">
+                <NSelect v-model:value="form.proxyMode" :options="proxyOptions" size="small" style="width: 100%" />
               </NFormItem>
 
               <!-- 全局代理地址 -->
@@ -462,11 +445,7 @@ function handleClose() {
                 label-width="72px"
                 style="margin-bottom: 12px"
               >
-                <NInput
-                  :value="globalProxyServer"
-                  readonly
-                  size="small"
-                />
+                <NInput :value="globalProxyServer" readonly size="small" />
               </NFormItem>
 
               <!-- 自定义代理 -->
