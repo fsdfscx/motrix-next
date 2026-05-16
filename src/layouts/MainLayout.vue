@@ -20,7 +20,7 @@ import { handleTaskComplete, handleBtComplete, handleTaskError } from '@/composa
 import { shouldDeleteTorrent, trashTorrentFile, cleanupTorrentMetadataFiles } from '@/composables/useDownloadCleanup'
 import { cleanupAria2ControlFile } from '@/composables/useFileDelete'
 import { getTaskDisplayName, resolveOpenTarget, checkTaskIsSeeder } from '@shared/utils'
-import type { Aria2Task } from '@shared/types'
+import type { Aria2Task, Aria2EngineOptions } from '@shared/types'
 import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
 import { TASK_STATUS } from '@shared/constants'
 import { useHistoryStore } from '@/stores/history'
@@ -377,22 +377,37 @@ async function handleMagnetConfirm(selectedIndices: number[]) {
 }
 
 // 浏览器下载弹窗确认处理
-async function handleBrowserDownloadConfirm(data: { dir: string; filename: string }) {
+async function handleBrowserDownloadConfirm(data: {
+  url: string
+  dir: string
+  filename: string
+  options: Aria2EngineOptions
+}) {
   const downloadData = appStore.browserDownloadData
   if (!downloadData) return
 
-  const item = createBatchItem('uri', downloadData.url)
-  if (data.filename) {
-    item.displayName = data.filename
+  try {
+    // 使用构建好的选项提交下载任务
+    await taskStore.addUri({
+      uris: [data.url],
+      outs: data.filename ? [data.filename] : [],
+      options: data.options,
+    })
+
+    // 显示成功消息
+    message.success(t('task.add-task-success') || '任务添加成功')
+
+    // 记录历史目录
+    if (data.dir) {
+      preferenceStore.recordHistoryDirectory(data.dir)
+    }
+  } catch (e) {
+    logger.error('BrowserDownload.confirm', e)
+    message.error(t('task.add-task-fail') || '任务添加失败')
   }
 
-  appStore.enqueueBatch([item])
   appStore.browserDownloadVisible = false
   appStore.browserDownloadData = null
-
-  if (data.dir) {
-    preferenceStore.recordHistoryDirectory(data.dir)
-  }
 }
 
 // 浏览器下载弹窗关闭处理
