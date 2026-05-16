@@ -535,7 +535,10 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
 
     // 如果显示了浏览器下载弹窗，不显示主窗口
     if (appStore.browserDownloadVisible) {
-      logger.debug('ExternalInput', formatLogFields({ traceId, stage: 'window', result: 'skipped', reason: 'browser-download-dialog-visible' }))
+      logger.debug(
+        'ExternalInput',
+        formatLogFields({ traceId, stage: 'window', result: 'skipped', reason: 'browser-download-dialog-visible' }),
+      )
       return
     }
 
