@@ -168,8 +168,11 @@ function buildOptions(): Aria2EngineOptions {
 
   // Authorization
   if (form.value.authorization) {
-    if (!options.header) options.header = []
-    options.header.push(`Authorization: ${form.value.authorization}`)
+    if (!options.header) {
+      options.header = [`Authorization: ${form.value.authorization}`]
+    } else {
+      options.header = [...options.header, `Authorization: ${form.value.authorization}`]
+    }
   }
 
   // 代理

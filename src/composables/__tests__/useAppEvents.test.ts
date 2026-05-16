@@ -86,6 +86,7 @@ function createDeps() {
     handleDeepLinkUrls: vi.fn(),
     engineReady: false,
     engineRestarting: true,
+    browserDownloadVisible: false,
   })
   const taskStore = reactive({
     taskList: [] as unknown[],
