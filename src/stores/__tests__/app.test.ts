@@ -421,9 +421,9 @@ describe('useAppStore', () => {
       const referer = encodeURIComponent('https://example.com/downloads')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}`])
 
-      expect(store.pendingBatch).toHaveLength(1)
-      expect(store.pendingBatch[0].source).toBe('https://cdn.example.com/file.zip')
-      expect(store.pendingReferer).toBe('https://example.com/downloads')
+      expect(store.browserDownloadVisible).toBe(true)
+      expect(store.browserDownloadData?.url).toBe('https://cdn.example.com/file.zip')
+      expect(store.browserDownloadData?.referer).toBe('https://example.com/downloads')
     })
 
     it('handles single-slash motrixnext new deep links', () => {
@@ -456,19 +456,20 @@ describe('useAppStore', () => {
         `motrixnext://new?url=${url2}&referer=${ref2}`,
       ])
 
-      expect(store.pendingBatch).toHaveLength(2)
-      expect(store.pendingReferer).toBe('https://site-b.com')
+      expect(store.browserDownloadVisible).toBe(true)
+      expect(store.browserDownloadData?.referer).toBe('https://site-b.com')
     })
 
-    it('clears pendingReferer when hideAddTaskDialog is called', () => {
+    it('clears referer when hideBrowserDownloadDialog is called', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
       const referer = encodeURIComponent('https://example.com')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}`])
-      expect(store.pendingReferer).toBe('https://example.com')
+      expect(store.browserDownloadData?.referer).toBe('https://example.com')
 
-      store.hideAddTaskDialog()
-      expect(store.pendingReferer).toBe('')
+      store.hideBrowserDownloadDialog()
+      expect(store.browserDownloadVisible).toBe(false)
+      expect(store.browserDownloadData).toBeNull()
     })
 
     // ── Cookie extraction (mirrors referer tests above) ────────────
@@ -479,9 +480,9 @@ describe('useAppStore', () => {
       const cookie = encodeURIComponent('session=abc123; token=xyz')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&cookie=${cookie}`])
 
-      expect(store.pendingBatch).toHaveLength(1)
-      expect(store.pendingBatch[0].source).toBe('https://cdn.quark.cn/file.zip')
-      expect(store.pendingCookie).toBe('session=abc123; token=xyz')
+      expect(store.browserDownloadVisible).toBe(true)
+      expect(store.browserDownloadData?.url).toBe('https://cdn.quark.cn/file.zip')
+      expect(store.browserDownloadData?.cookie).toBe('session=abc123; token=xyz')
     })
 
     it('sets pendingCookie to empty when deep link has no cookie param', () => {
@@ -504,19 +505,20 @@ describe('useAppStore', () => {
         `motrixnext://new?url=${url2}&cookie=${c2}`,
       ])
 
-      expect(store.pendingBatch).toHaveLength(2)
-      expect(store.pendingCookie).toBe('sid=bbb')
+      expect(store.browserDownloadVisible).toBe(true)
+      expect(store.browserDownloadData?.cookie).toBe('sid=bbb')
     })
 
-    it('clears pendingCookie when hideAddTaskDialog is called', () => {
+    it('clears cookie when hideBrowserDownloadDialog is called', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
       const cookie = encodeURIComponent('auth=secret')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&cookie=${cookie}`])
-      expect(store.pendingCookie).toBe('auth=secret')
+      expect(store.browserDownloadData?.cookie).toBe('auth=secret')
 
-      store.hideAddTaskDialog()
-      expect(store.pendingCookie).toBe('')
+      store.hideBrowserDownloadDialog()
+      expect(store.browserDownloadVisible).toBe(false)
+      expect(store.browserDownloadData).toBeNull()
     })
 
     it('extracts both referer and cookie from same deep link', () => {
@@ -526,9 +528,9 @@ describe('useAppStore', () => {
       const cookie = encodeURIComponent('__puus=abc; __pus=def')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}&cookie=${cookie}`])
 
-      expect(store.pendingBatch).toHaveLength(1)
-      expect(store.pendingReferer).toBe('https://pan.quark.cn')
-      expect(store.pendingCookie).toBe('__puus=abc; __pus=def')
+      expect(store.browserDownloadVisible).toBe(true)
+      expect(store.browserDownloadData?.referer).toBe('https://pan.quark.cn')
+      expect(store.browserDownloadData?.cookie).toBe('__puus=abc; __pus=def')
     })
 
     // ── Filename extraction (mirrors referer/cookie tests above) ────
@@ -539,9 +541,9 @@ describe('useAppStore', () => {
       const filename = encodeURIComponent('ghost-sample-v0.1.xmgic')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&filename=${filename}`])
 
-      expect(store.pendingBatch).toHaveLength(1)
-      expect(store.pendingBatch[0].source).toBe('https://cdn.quark.cn/hash123')
-      expect(store.pendingFilename).toBe('ghost-sample-v0.1.xmgic')
+      expect(store.browserDownloadVisible).toBe(true)
+      expect(store.browserDownloadData?.url).toBe('https://cdn.quark.cn/hash123')
+      expect(store.browserDownloadData?.filename).toBe('ghost-sample-v0.1.xmgic')
     })
 
     it('sets pendingFilename to empty when deep link has no filename param', () => {
@@ -553,15 +555,16 @@ describe('useAppStore', () => {
       expect(store.pendingFilename).toBe('')
     })
 
-    it('clears pendingFilename when hideAddTaskDialog is called', () => {
+    it('clears filename when hideBrowserDownloadDialog is called', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://cdn.quark.cn/hash123')
       const filename = encodeURIComponent('test.zip')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&filename=${filename}`])
-      expect(store.pendingFilename).toBe('test.zip')
+      expect(store.browserDownloadData?.filename).toBe('test.zip')
 
-      store.hideAddTaskDialog()
-      expect(store.pendingFilename).toBe('')
+      store.hideBrowserDownloadDialog()
+      expect(store.browserDownloadVisible).toBe(false)
+      expect(store.browserDownloadData).toBeNull()
     })
 
     it('extracts filename together with referer and cookie', () => {
@@ -572,10 +575,10 @@ describe('useAppStore', () => {
       const filename = encodeURIComponent('ghost-sample-v0.1.xmgic')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}&cookie=${cookie}&filename=${filename}`])
 
-      expect(store.pendingBatch).toHaveLength(1)
-      expect(store.pendingReferer).toBe('https://pan.quark.cn')
-      expect(store.pendingCookie).toBe('__puus=abc')
-      expect(store.pendingFilename).toBe('ghost-sample-v0.1.xmgic')
+      expect(store.browserDownloadVisible).toBe(true)
+      expect(store.browserDownloadData?.referer).toBe('https://pan.quark.cn')
+      expect(store.browserDownloadData?.cookie).toBe('__puus=abc')
+      expect(store.browserDownloadData?.filename).toBe('ghost-sample-v0.1.xmgic')
     })
 
     it('ignores generic browser fallback filename from extension deep link', () => {

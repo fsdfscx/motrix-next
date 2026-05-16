@@ -171,6 +171,11 @@ export const useAppStore = defineStore('app', () => {
     pendingFilename.value = ''
   }
 
+  function hideBrowserDownloadDialog() {
+    browserDownloadVisible.value = false
+    browserDownloadData.value = null
+  }
+
   function updateAddTaskOptions(options: Aria2EngineOptions = {}) {
     addTaskOptions.value = { ...options }
   }
@@ -287,8 +292,13 @@ export const useAppStore = defineStore('app', () => {
             }),
           )
 
-          // 如果是浏览器扩展的下载请求，显示专门的弹窗
-          if (motrixDeepLink.referer || motrixDeepLink.cookie || resolvedHint) {
+          if (autoSubmit && kind === 'uri') {
+            pendingReferer.value = motrixDeepLink.referer || ''
+            pendingCookie.value = motrixDeepLink.cookie || ''
+            pendingFilename.value = resolvedHint || ''
+            result.autoSubmitted += 1
+            void autoSubmitExtensionUrl(downloadUrl, motrixDeepLink.referer, motrixDeepLink.cookie, resolvedHint)
+          } else if (motrixDeepLink.referer || motrixDeepLink.cookie || resolvedHint) {
             browserDownloadData.value = {
               url: downloadUrl,
               referer: motrixDeepLink.referer,
@@ -297,10 +307,6 @@ export const useAppStore = defineStore('app', () => {
             }
             browserDownloadVisible.value = true
             result.queued += 1
-          } else if (autoSubmit && kind === 'uri') {
-            // 没有额外信息的自动提交
-            result.autoSubmitted += 1
-            void autoSubmitExtensionUrl(downloadUrl, motrixDeepLink.referer, motrixDeepLink.cookie, resolvedHint)
           } else {
             const item = createBatchItem(kind, downloadUrl)
             if (resolvedHint) {
@@ -440,6 +446,7 @@ export const useAppStore = defineStore('app', () => {
     enqueueBatch,
     showAddTaskDialog,
     hideAddTaskDialog,
+    hideBrowserDownloadDialog,
     updateAddTaskOptions,
     fetchGlobalStat,
     handleStatEvent,
